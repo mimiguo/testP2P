@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955"
+	minHeight="600" applicationComplete="init()" >
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import com.adobe.viewsource.ViewSource;
+			import org.osmf.events.*;
+			import mx.utils.ObjectUtil;
+			import com.vo.PostMsg;
+			
+			private const TOBE	: String ="rtmfp://fms.2be.com.tw";
+//			private const TOBE	: String ="rtmp://fms.2be.com.tw";
+			private const CIRRUS : String = "rtmfp://p2p.rtmfp.net";
+			private const DEVKEY : String = "bcca91ad645ebd232ef1ff21-6bd3cc2034b1";
+			private var netConnection : NetConnection;
+			private var netGroup : NetGroup;
+			private var joinGroup:Boolean = false;
+			private var sequenceNumber:int = 0;
+			private var ns:NetStream;
+			private var vid:Video;
+			private var vidContainer:UIComponent;
+			private function init() : void 
+			{
+				netConnection = new NetConnection();
+				netConnection.client = this;
+				netConnection.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);			
+			}
+
+			private function connectHandler(e:NetStatusEvent) : void 
+			{
+				trace(e.info.code);
+				pushMsg(e.info.code);
+				switch (e.info.code)
+				{
+					case "NetConnection.Connect.Closed":
+                	case "NetConnection.Connect.Failed":
+                	case "NetConnection.Connect.Rejected":
+                	case "NetConnection.Connect.AppShutdown":
+                	case "NetConnection.Connect.InvalidApp":
+					onDisconnect();
+                    break; 
+					case "NetConnection.Connect.Success":
+						trace(netConnection.nearID);
+						pushMsg('netConnection.nearID:'+ netConnection.nearID);
+						onConnect();
+						
+					break;
+					
+					case "NetStream.Connect.Success":
+						onNetStreamConnect();
+					break;
+					case "NetStream.Connect.Rejected":
+					break;
+					case "NetStream.Connect.Failed":
+						doDisconnect();
+					break;
+					case "NetStream.MulticastStream.Reset":
+					break;
+					case "NetStream.Buffer.Full":
+					break;
+					
+					case "NetGroup.Connect.Success":
+						onNetGroupConnect();
+					break;
+					case "NetGroup.Connect.Rejected":
+					break;
+					case "NetGroup.Connect.Failed":
+					break;
+						doDisconnect();
+						break;
+					case "NetGroup.Posting.Notify":
+						trace(ObjectUtil.toString(e.info));
+//						pushMsg( e.info.message.detail() );
+						var msg:Object = e.info.message;
+						pushMsg( msg.user+" says:"+msg.text );
+					break;
+					case "NetGroup.SendTo.Notify":
+					case "NetGroup.LocalCoverage.Notify":
+					case "NetGroup.Neighbor.Connect":
+					case "NetGroup.Neighbor.Disconnect":
+					case "NetGroup.MulticastStream.PublishNotify":
+					case "NetGroup.MulticastStream.UnpublishNotify":
+					case "NetGroup.Replication.Fetch.SendNotify":
+					case "NetGroup.Replication.Fetch.Failed":
+					case "NetGroup.Replication.Fetch.Result":
+					case "NetGroup.Replication.Request":
+					break;
+				}
+			}
+
+			private function onDisconnect() : void 
+			{
+				pushMsg("Disconnected");
+				netConnection = null;
+				ns = null;
+				netGroup = null;
+				connect_btn.label="connect";
+				joinGroup = false;
+			}
+
+			private function onConnect() : void 
+			{
+				connect_btn.label="disconnect";
+				
+				var groupSpecifier:GroupSpecifier;
+//				groupSpecifier = new GroupSpecifier("aaaa");
+				groupSpecifier = new GroupSpecifier("fms.multicast.test");
+				groupSpecifier.postingEnabled = true;
+				groupSpecifier.multicastEnabled = true;
+				groupSpecifier.serverChannelEnabled = true;
+				
+//				groupSpecifier.ipMulticastMemberUpdatesEnabled = true;
+//				groupSpecifier.addIPMulticastAddress("224.0.0.255:30000");
+				
+				trace('groupSpecifier.toString()', groupSpecifier.toString());
+				trace('*', groupSpecifier.groupspecWithoutAuthorizations());			
+				
+				netGroup = new NetGroup(netConnection, groupSpecifier.toString());
+				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithAuthorizations());
+				netGroup.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
+
+//				var ns:NetStream = new NetStream(netConnection, groupSpecifier.toString());
+//				ns = new NetStream(netConnection, groupSpecifier.groupspecWithAuthorizations());
+				ns = new NetStream(netConnection, "oAAdAAAA");
+//				ns = new NetStream(netConnection);
+				ns.client = this;
+				ns.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
+			}
+
+			private function connect() : void 
+			{
+				if (connect_btn.label =="disconnect") {
+					netConnection.close();
+					return;
+				}
+//				var p2p:String = CIRRUS+"/"+DEVKEY;
+				var p2p:String = TOBE+"/"+"multicast";
+//				var p2p:String = TOBE+"/"+"p2p/test";
+				pushMsg('connect '+p2p);
+//				var live:String = TOBE+"/"+"live";
+//				netConnection.connect(CIRRUS, DEVKEY);
+				netConnection.connect(p2p);
+//				netConnection.connect(live);
+			}
+			
+			private function onNetStreamConnect() : void
+			{
+			}
+
+			private function doDisconnect() : void 
+			{
+				
+				
+			}
+			
+			private function onNetGroupConnect() : void
+			{
+				//pushMsg(netGroup.info.toString());
+				joinGroup = true;
+			}
+			
+			private function pushMsg(msg:String) : void
+			{
+				msg_ta.appendText(msg+"\n");
+			}
+			
+			private function post(e:MouseEvent) : void
+			{
+				if ( joinGroup ) {
+					var msg:com.vo.PostMsg = new PostMsg();
+					msg.user = user_ti.text;
+					msg.text = chat_ti.text;
+					msg.sequence = sequenceNumber++;
+					msg.sender = netConnection.nearID; 
+					netGroup.post(msg);
+				} else {
+					
+				}
+				chat_ti.text = "";
+			}
+			public function onBWDone(...rest):void
+			{
+				trace('onBWDone();'+ rest, rest.length);
+				for (var i:int=0; i<rest.length; ++i) {
+					trace("\t"+i+":"+rest[i]);
+				}
+			}
+			public function onMetaData(info:Object):void
+			{
+				trace('onMetaData');
+				for( var p:String in info)
+				{
+					trace(p, info[p]);
+				}
+			}
+			public function onPlayStatus(info:Object):void
+			{
+				trace('onPlayStatus');
+				for( var p:String in info)
+				{
+					trace('*', p, info[p]);
+				}
+			}
+			private function play():void
+			{
+				trace('play');
+				
+				vid = new Video();
+				vidContainer = new UIComponent();
+				vidContainer.addChild(vid);
+				
+				vidContainer.x=400;
+				vidContainer.y=130;
+				addElement(vidContainer);
+				
+//				ns.play("livestream?fms.multicast.type=3&fms.multicast.groupspec=G%3A010121055e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8010c130e666d732e6d756c7469636173742e74657374210eb9461f944c6498329222785bd2508c74dd03fdde86d8b745d6f8756ef6d1b54f00091570617373776f7264");
+				ns.play('livestream');
+				vid.attachNetStream(ns);
+			}
+		]]>
+	</fx:Script>
+		<s:VGroup x="5" y="5">
+			<s:Label text="connect message"/>
+			<s:TextArea id="msg_ta" width="500"/>
+		<s:Button id="connect_btn" label="connect" click="connect()" />
+		<s:TextInput id="user_ti" width="500"/>
+		<s:TextInput id="chat_ti" width="500"/>
+		<s:Button id="post_btn" label="post" click="post(event)" />
+		<!--<s:TextInput id="stream_txt" width="500"/>-->
+		<s:Button id="play_btn" label="play" click="play()" />
+		</s:VGroup>
+</s:Application>
