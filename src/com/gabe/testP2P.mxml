@@ -70,8 +70,6 @@
 						doDisconnect();
 						break;
 					case "NetGroup.Posting.Notify":
-						trace(ObjectUtil.toString(e.info));
-//						pushMsg( e.info.message.detail() );
 						var msg:Object = e.info.message;
 						pushMsg( msg.user+" says:"+msg.text );
 					break;
@@ -103,7 +101,6 @@
 			{
 				connect_btn.label="disconnect";
 				
-//				groupSpecifier = new GroupSpecifier("fms.multicast.test");
 				var groupSpecifier:GroupSpecifier = new GroupSpecifier(groupName_ti.text);
 //				groupSpecifier.postingEnabled = true;
 				groupSpecifier.multicastEnabled = true;
@@ -200,7 +197,6 @@
 				
 				videoPlaceholder.addElement(vidContainer);
 				netStream.play('livestream');
-				netStream.bufferTime = 4;
 				vid.attachNetStream(netStream);
 			}
 			
