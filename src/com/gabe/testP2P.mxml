@@ -104,9 +104,8 @@
 				var groupSpecifier:GroupSpecifier = new GroupSpecifier(groupName_ti.text);
 //				groupSpecifier.postingEnabled = true;
 				groupSpecifier.multicastEnabled = true;
-			 	groupSpecifier.setPublishPassword('aaaa');
+			 	groupSpecifier.setPublishPassword(pwd_ti.text);
 				groupSpecifier.serverChannelEnabled = true;
-				//groupSpecifier.makeUnique();
 				
 //				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
 //				netGroup.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);

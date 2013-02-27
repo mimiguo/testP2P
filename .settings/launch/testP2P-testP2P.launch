@@ -21,7 +21,7 @@
 <booleanAttribute key="START_DEBUGGER" value="true"/>
 <booleanAttribute key="START_SWF_ENABLED" value="true"/>
 <stringAttribute key="START_SWF_LOCATION" value="bin/testP2P.swf"/>
-<stringAttribute key="START_SWF_WITH" value="External SWF Viewer"/>
+<stringAttribute key="START_SWF_WITH" value="Browser"/>
 <booleanAttribute key="SUPPRESS_EXCEPTION_POPUP" value="true"/>
 <booleanAttribute key="USE_PROJECT_COMPILER_ARGUMENTS" value="true"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">

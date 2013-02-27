@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="com.powerflasher.fdt.ui.CompcGroup">
+<stringAttribute key="ARGUMENTS" value=" -target-player={playerVersion}"/>
+<stringAttribute key="COMPILER_TECHNOLOGY" value="Flex SDK"/>
 <stringAttribute key="LAUNCHER_DEPENDENCIES" value="[Self]"/>
 <stringAttribute key="MAIN_CLASS" value=""/>
 <stringAttribute key="OUTPUT" value="bin/testP2P.swc"/>
+<booleanAttribute key="PASS_CP" value="true"/>
+<booleanAttribute key="PASS_SWCS" value="true"/>
 <stringAttribute key="PROJECT_NAME" value="testP2P"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/testP2P"/>
