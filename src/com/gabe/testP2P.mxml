@@ -12,14 +12,13 @@
 			import com.vo.PostMsg;
 			
 			private const TOBE	: String ="rtmfp://fms.2be.com.tw";
-//			private const TOBE	: String ="rtmp://fms.2be.com.tw";
 			private const CIRRUS : String = "rtmfp://p2p.rtmfp.net";
 			private const DEVKEY : String = "bcca91ad645ebd232ef1ff21-6bd3cc2034b1";
 			private var netConnection : NetConnection;
 			private var netGroup : NetGroup;
 			private var joinGroup:Boolean = false;
 			private var sequenceNumber:int = 0;
-			private var ns:NetStream;
+			private var netStream:NetStream;
 			private var vid:Video;
 			private var vidContainer:UIComponent;
 			private function init() : void 
@@ -43,10 +42,9 @@
 					onDisconnect();
                     break; 
 					case "NetConnection.Connect.Success":
-						trace(netConnection.nearID);
+						trace('netConnection.nearID', netConnection.nearID);
 						pushMsg('netConnection.nearID:'+ netConnection.nearID);
 						onConnect();
-						
 					break;
 					
 					case "NetStream.Connect.Success":
@@ -95,7 +93,7 @@
 			{
 				pushMsg("Disconnected");
 				netConnection = null;
-				ns = null;
+				netStream = null;
 				netGroup = null;
 				connect_btn.label="connect";
 				joinGroup = false;
@@ -107,27 +105,20 @@
 				
 				var groupSpecifier:GroupSpecifier;
 //				groupSpecifier = new GroupSpecifier("aaaa");
-				groupSpecifier = new GroupSpecifier("fms.multicast.test");
+//				groupSpecifier = new GroupSpecifier("fms.multicast.test");
+				groupSpecifier = new GroupSpecifier("gabe");
 				groupSpecifier.postingEnabled = true;
 				groupSpecifier.multicastEnabled = true;
 				groupSpecifier.serverChannelEnabled = true;
 				
-//				groupSpecifier.ipMulticastMemberUpdatesEnabled = true;
-//				groupSpecifier.addIPMulticastAddress("224.0.0.255:30000");
-				
-				trace('groupSpecifier.toString()', groupSpecifier.toString());
-				trace('*', groupSpecifier.groupspecWithoutAuthorizations());			
-				
-				netGroup = new NetGroup(netConnection, groupSpecifier.toString());
-				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithAuthorizations());
+				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
 				netGroup.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
 
-//				var ns:NetStream = new NetStream(netConnection, groupSpecifier.toString());
-//				ns = new NetStream(netConnection, groupSpecifier.groupspecWithAuthorizations());
-				ns = new NetStream(netConnection, "oAAdAAAA");
-//				ns = new NetStream(netConnection);
-				ns.client = this;
-				ns.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
+//				netStream = new NetStream(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
+				netStream = new NetStream(netConnection, "G:010121055e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8010c050e67616265210e069c31bf0197340f3bf3d6a7c9e933852eb6ad7e1bfa68decf03218ff9ac1eec00");
+//				ns = new NetStream(netConnection, "oAAdAAAA");
+				netStream.client = this;
+				netStream.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
 			}
 
 			private function connect() : void 
@@ -152,8 +143,6 @@
 
 			private function doDisconnect() : void 
 			{
-				
-				
 			}
 			
 			private function onNetGroupConnect() : void
@@ -208,28 +197,42 @@
 			{
 				trace('play');
 				
-				vid = new Video();
+				vid = new Video(320,240);
 				vidContainer = new UIComponent();
 				vidContainer.addChild(vid);
 				
-				vidContainer.x=400;
-				vidContainer.y=130;
-				addElement(vidContainer);
-				
-//				ns.play("livestream?fms.multicast.type=3&fms.multicast.groupspec=G%3A010121055e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8010c130e666d732e6d756c7469636173742e74657374210eb9461f944c6498329222785bd2508c74dd03fdde86d8b745d6f8756ef6d1b54f00091570617373776f7264");
-				ns.play('livestream');
-				vid.attachNetStream(ns);
+				videoPlaceholder.addElement(vidContainer);
+				netStream.play('livestream');
+				netStream.bufferTime = 4;
+				vid.attachNetStream(netStream);
+			}
+			
+			private function checkGroupString() :void
+			{
+				var g:GroupSpecifier = new GroupSpecifier(groupName.text);
+				gstring_ta.text = g.groupspecWithAuthorizations();
 			}
 		]]>
 	</fx:Script>
 		<s:VGroup x="5" y="5">
-			<s:Label text="connect message"/>
-			<s:TextArea id="msg_ta" width="500"/>
-		<s:Button id="connect_btn" label="connect" click="connect()" />
-		<s:TextInput id="user_ti" width="500"/>
-		<s:TextInput id="chat_ti" width="500"/>
-		<s:Button id="post_btn" label="post" click="post(event)" />
-		<!--<s:TextInput id="stream_txt" width="500"/>-->
-		<s:Button id="play_btn" label="play" click="play()" />
+		<s:HGroup>
+			<s:VGroup>
+				<s:Label text="connect message"/>
+				<s:TextArea id="msg_ta" width="500"/>
+				<s:Button id="connect_btn" label="connect" click="connect()" />
+			</s:VGroup>
+			<s:VGroup>
+				<s:Label text="group"/>
+				<s:TextInput id="groupName" width="300"/>
+				<s:TextArea id="gstring_ta" width="500"/>
+				<s:Button id="chkName_btn" label="check" click="checkGroupString()" />
+			</s:VGroup>
+		</s:HGroup>
+			<s:TextInput id="user_ti" width="500"/>
+			<s:TextInput id="chat_ti" width="500"/>
+			<s:Button id="post_btn" label="post" click="post(event)" />
+		<s:Button id="play_btn" label="play" click="play()"/>
+		<s:BorderContainer backgroundColor="#000000" id="videoPlaceholder" width="500" height="500">
+		</s:BorderContainer>
 		</s:VGroup>
 </s:Application>
