@@ -42,8 +42,8 @@
 					onDisconnect();
                     break; 
 					case "NetConnection.Connect.Success":
-						trace('netConnection.nearID', netConnection.nearID);
-						pushMsg('netConnection.nearID:'+ netConnection.nearID);
+//						trace('netConnection.nearID', netConnection.nearID);
+//						pushMsg('netConnection.nearID:'+ netConnection.nearID);
 						onConnect();
 					break;
 					
@@ -103,20 +103,22 @@
 			{
 				connect_btn.label="disconnect";
 				
-				var groupSpecifier:GroupSpecifier;
-//				groupSpecifier = new GroupSpecifier("aaaa");
 //				groupSpecifier = new GroupSpecifier("fms.multicast.test");
-				groupSpecifier = new GroupSpecifier("gabe");
-				groupSpecifier.postingEnabled = true;
+				var groupSpecifier:GroupSpecifier = new GroupSpecifier(groupName_ti.text);
+//				groupSpecifier.postingEnabled = true;
 				groupSpecifier.multicastEnabled = true;
+			 	groupSpecifier.setPublishPassword('aaaa');
 				groupSpecifier.serverChannelEnabled = true;
+				//groupSpecifier.makeUnique();
 				
-				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
-				netGroup.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
-
-//				netStream = new NetStream(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
-				netStream = new NetStream(netConnection, "G:010121055e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8010c050e67616265210e069c31bf0197340f3bf3d6a7c9e933852eb6ad7e1bfa68decf03218ff9ac1eec00");
-//				ns = new NetStream(netConnection, "oAAdAAAA");
+//				netGroup = new NetGroup(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
+//				netGroup.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
+				
+				pushMsg( '\ngroupSpecifier.groupspecWithAuthorizations():\n'    + groupSpecifier.groupspecWithAuthorizations() );
+				pushMsg( '\ngroupSpecifier.groupspecWithoutAuthorizations():\n' + groupSpecifier.groupspecWithoutAuthorizations() );
+				pushMsg( '\ngroupSpecifier.toString():\n' + groupSpecifier.toString() );
+				
+				netStream = new NetStream(netConnection, groupSpecifier.groupspecWithoutAuthorizations());
 				netStream.client = this;
 				netStream.addEventListener(NetStatusEvent.NET_STATUS, connectHandler);
 			}
@@ -127,14 +129,11 @@
 					netConnection.close();
 					return;
 				}
-//				var p2p:String = CIRRUS+"/"+DEVKEY;
 				var p2p:String = TOBE+"/"+"multicast";
 //				var p2p:String = TOBE+"/"+"p2p/test";
 				pushMsg('connect '+p2p);
-//				var live:String = TOBE+"/"+"live";
 //				netConnection.connect(CIRRUS, DEVKEY);
 				netConnection.connect(p2p);
-//				netConnection.connect(live);
 			}
 			
 			private function onNetStreamConnect() : void
@@ -165,8 +164,6 @@
 					msg.sequence = sequenceNumber++;
 					msg.sender = netConnection.nearID; 
 					netGroup.post(msg);
-				} else {
-					
 				}
 				chat_ti.text = "";
 			}
@@ -209,27 +206,45 @@
 			
 			private function checkGroupString() :void
 			{
-				var g:GroupSpecifier = new GroupSpecifier(groupName.text);
-				gstring_ta.text = g.groupspecWithAuthorizations();
+				var g:GroupSpecifier = new GroupSpecifier(chk_groupName_ti.text);
+				if ( p2p_cb.selected) {
+					g.peerToPeerDisabled = true;						
+				}
+				if (password.text != "") {
+					g.setPublishPassword(password.text);
+				}
+				if ( unigue_cb.selected ) {
+					g.makeUnique();
+				}
+				gstring_ta.text = 'groupspecWithAuthorizations:'+g.groupspecWithAuthorizations()+'\ngroupspecWithoutAuthorizations:'+g.groupspecWithoutAuthorizations();
+				gstring_ta.text += '\ntostring:'+g.toString();
 			}
 		]]>
 	</fx:Script>
 		<s:VGroup x="5" y="5">
 		<s:HGroup>
 			<s:VGroup>
-				<s:Label text="connect message"/>
-				<s:TextArea id="msg_ta" width="500"/>
+				<s:Label text="groupName"/>
+				<s:TextInput id="groupName_ti" width="300">gabe</s:TextInput>
+				<s:Label text="password"/>
+				<s:TextInput id="pwd_ti" width="300" displayAsPassword="true">aaaa</s:TextInput>
 				<s:Button id="connect_btn" label="connect" click="connect()" />
+				<s:Label text="connect message"/>
+				<s:TextArea id="msg_ta" width="500" height="200" editable="false"/>
 			</s:VGroup>
 			<s:VGroup>
-				<s:Label text="group"/>
-				<s:TextInput id="groupName" width="300"/>
+				<s:Label text="groupName"/>
+				<s:TextInput id="chk_groupName_ti" width="300"/>
 				<s:TextArea id="gstring_ta" width="500"/>
+				<s:TextInput id="password" width="300"/>
+				<s:CheckBox label="make unigue" id="unigue_cb"/>
+				<s:CheckBox label="peerToPeerDisabled" id="p2p_cb"/>
 				<s:Button id="chkName_btn" label="check" click="checkGroupString()" />
 			</s:VGroup>
 		</s:HGroup>
-			<s:TextInput id="user_ti" width="500"/>
-			<s:TextInput id="chat_ti" width="500"/>
+			<s:Label text="test pass message within group"/>
+			<s:TextInput id="user_ti" width="500" text="gabe"/>
+			<s:TextInput id="chat_ti" width="500" text="chat message"/>
 			<s:Button id="post_btn" label="post" click="post(event)" />
 		<s:Button id="play_btn" label="play" click="play()"/>
 		<s:BorderContainer backgroundColor="#000000" id="videoPlaceholder" width="500" height="500">
